@@ -1,0 +1,3 @@
+﻿  CPPGetDevicesProgram.cpp
+LINK : warning LNK4067: ambiguous entry point; selected 'mainCRTStartup'
+  CPPGetDevicesProgram.vcxproj -> C:\Private_Projects\USBDevDescriptorAccess\USBDevDescriptorAccess\Debug\CPPGetDevicesProgram.exe
