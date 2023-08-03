@@ -235,6 +235,9 @@ namespace USBDevDescriptorAccess
         [DllImport("setupapi.dll", SetLastError = true)]
         private static extern IntPtr SetupDiGetClassDevs(ref Guid gClass, UInt32 iEnumerator, UInt32 hParent, DiGetClassFlags nFlags);
 
+        [DllImport("setupapi.dll", SetLastError = true)]
+        private static extern IntPtr SetupDiGetClassDevs(IntPtr gClass, UInt32 iEnumerator, UInt32 hParent, DiGetClassFlags nFlags);
+
         [DllImport("Setupapi", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope,
             uint hwProfile, uint parameterRegistryValueKind, uint samDesired);
@@ -359,6 +362,55 @@ namespace USBDevDescriptorAccess
             return devices;
         }
 
+        public static List<DeviceInfo> GetAllUSBDEvices()
+        {
+            Guid[] guids = GetClassGUIDs("Ports");
+            //Guid[] guids = GetClassGUIDs("COM");
+            List<DeviceInfo> devices = new List<DeviceInfo>();
+            IntPtr hDeviceInfoSet = SetupDiGetClassDevs( IntPtr.Zero, 0, 0, DiGetClassFlags.DIGCF_PRESENT| DiGetClassFlags.DIGCF_ALLCLASSES );
+            if (hDeviceInfoSet == IntPtr.Zero)
+            {
+                Console.WriteLine(" SetupDiGetClassDevs failed ");
+            }
+
+            try
+            {
+                UInt32 iMemberIndex = 0;
+                while (true)
+                {
+                    SP_DEVINFO_DATA deviceInfoData = new SP_DEVINFO_DATA();
+                    deviceInfoData.cbSize = (uint)Marshal.SizeOf(typeof(SP_DEVINFO_DATA));
+                    bool success = SetupDiEnumDeviceInfo(hDeviceInfoSet, iMemberIndex, ref deviceInfoData);
+                    if (!success)
+                    {
+                        // No more devices in the device information set
+                        break;
+                    }
+
+                    DeviceInfo deviceInfo = new DeviceInfo();
+
+                    deviceInfo.name = GetDeviceName(hDeviceInfoSet, deviceInfoData);
+                    deviceInfo.description = GetDeviceDescription(hDeviceInfoSet, deviceInfoData);
+                    //if (deviceInfo.name == "COM1")
+                    //{
+                        deviceInfo.bus_description = GetDeviceBusDescription(hDeviceInfoSet, deviceInfoData);
+                    //}
+                    devices.Add(deviceInfo);
+                    Console.WriteLine(" Device name: {0} ", deviceInfo.name);
+                    Console.WriteLine(" Device description: {0} ", deviceInfo.description);
+                    Console.WriteLine(" Device bus_desccription: {0} ", deviceInfo.bus_description);
+                    iMemberIndex++;
+                }
+            }
+            finally
+            {
+                SetupDiDestroyDeviceInfoList(hDeviceInfoSet);
+            }
+            
+            return devices;
+        }
+
+
         private static string GetDeviceName(IntPtr pDevInfoSet, SP_DEVINFO_DATA deviceInfoData)
         {
             IntPtr hDeviceRegistryKey = SetupDiOpenDevRegKey(pDevInfoSet, ref deviceInfoData,
@@ -376,7 +428,7 @@ namespace USBDevDescriptorAccess
                 int result = RegQueryValueEx(hDeviceRegistryKey, "PortName", 0, out lpRegKeyType, ptrBuf, ref length);
                 if (result != 0)
                 {
-                    throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                    //throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
                 }
             }
             finally
@@ -396,7 +448,7 @@ namespace USBDevDescriptorAccess
                 out propRegDataType, ptrBuf, BUFFER_SIZE, out RequiredSize);
             if (!success)
             {
-                throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+               // throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
             }
             return Encoding.Unicode.GetString(ptrBuf, 0, (int)RequiredSize - utf16terminatorSize_bytes);
         }
@@ -410,7 +462,7 @@ namespace USBDevDescriptorAccess
                 out propRegDataType, ptrBuf, BUFFER_SIZE, out RequiredSize, 0);
             if (!success)
             {
-                throw new Exception("Can not read Bus provided device description device " + deviceInfoData.ClassGuid);
+                //throw new Exception("Can not read Bus provided device description device " + deviceInfoData.ClassGuid);
             }
             return System.Text.UnicodeEncoding.Unicode.GetString(ptrBuf, 0, (int)RequiredSize - utf16terminatorSize_bytes);
         }
