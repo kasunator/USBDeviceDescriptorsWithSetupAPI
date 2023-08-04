@@ -420,7 +420,9 @@ namespace USBDevDescriptorAccess
                 DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_QUERY_VALUE);
             if (hDeviceRegistryKey == IntPtr.Zero)
             {
-                throw new Exception("Failed to open a registry key for device-specific configuration information");
+                //throw new Exception("Failed to open a registry key for device-specific configuration information");
+                Console.WriteLine("Failed to open a registry key for device-specific configuration information");
+                return "";
             }
 
             byte[] ptrBuf = new byte[BUFFER_SIZE];
@@ -432,6 +434,8 @@ namespace USBDevDescriptorAccess
                 if (result != 0)
                 {
                     //throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                    Console.WriteLine("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                    return "";
                 }
             }
             finally
@@ -451,7 +455,9 @@ namespace USBDevDescriptorAccess
                 out propRegDataType, ptrBuf, BUFFER_SIZE, out RequiredSize);
             if (!success)
             {
-               // throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                // throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                Console.WriteLine("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                return "";
             }
             return Encoding.Unicode.GetString(ptrBuf, 0, (int)RequiredSize - utf16terminatorSize_bytes);
         }
@@ -466,6 +472,8 @@ namespace USBDevDescriptorAccess
             if (!success)
             {
                 //throw new Exception("Can not read Bus provided device description device " + deviceInfoData.ClassGuid);
+                Console.WriteLine("Can not read Bus provided device description device " + deviceInfoData.ClassGuid);
+                return "";
             }
             return System.Text.UnicodeEncoding.Unicode.GetString(ptrBuf, 0, (int)RequiredSize - utf16terminatorSize_bytes);
         }
