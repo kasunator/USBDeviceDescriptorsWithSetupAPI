@@ -238,6 +238,9 @@ namespace USBDevDescriptorAccess
         [DllImport("setupapi.dll", SetLastError = true)]
         private static extern IntPtr SetupDiGetClassDevs(IntPtr gClass, UInt32 iEnumerator, UInt32 hParent, DiGetClassFlags nFlags);
 
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr SetupDiGetClassDevs(IntPtr gClass, [MarshalAs(UnmanagedType.LPTStr)] string iEnumerator, UInt32 hParent, DiGetClassFlags nFlags);
+
         [DllImport("Setupapi", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope,
             uint hwProfile, uint parameterRegistryValueKind, uint samDesired);
@@ -367,7 +370,7 @@ namespace USBDevDescriptorAccess
             Guid[] guids = GetClassGUIDs("Ports");
             //Guid[] guids = GetClassGUIDs("COM");
             List<DeviceInfo> devices = new List<DeviceInfo>();
-            IntPtr hDeviceInfoSet = SetupDiGetClassDevs( IntPtr.Zero, 0, 0, DiGetClassFlags.DIGCF_PRESENT| DiGetClassFlags.DIGCF_ALLCLASSES );
+            IntPtr hDeviceInfoSet = SetupDiGetClassDevs( IntPtr.Zero,"USB", 0, DiGetClassFlags.DIGCF_PRESENT| DiGetClassFlags.DIGCF_ALLCLASSES );
             if (hDeviceInfoSet == IntPtr.Zero)
             {
                 Console.WriteLine(" SetupDiGetClassDevs failed ");
