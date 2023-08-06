@@ -241,9 +241,16 @@ namespace USBDevDescriptorAccess
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr SetupDiGetClassDevs(IntPtr gClass, [MarshalAs(UnmanagedType.LPTStr)] string iEnumerator, UInt32 hParent, DiGetClassFlags nFlags);
 
+       // [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+       // static extern int CM_Get_Device_ID(IntPtr pdnDevInst, IntPtr buffer, uint bufferLen, uint flags);
+
+        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern int CM_Get_Device_ID(UInt32 pdnDevInst, StringBuilder buffer, uint bufferLen, uint flags);
+
         [DllImport("Setupapi", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope,
             uint hwProfile, uint parameterRegistryValueKind, uint samDesired);
+
 
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, EntryPoint = "RegQueryValueExW", SetLastError = true)]
         private static extern int RegQueryValueEx(IntPtr hKey, string lpValueName, int lpReserved, out uint lpType,
@@ -308,6 +315,22 @@ namespace USBDevDescriptorAccess
             public string bus_description;
         }
 
+        public struct DeviceInfoAdvanced
+        {
+            public string DeviceDescription;
+            public string HardwareIDs;
+            public string BusRprtedDevDesc;
+            public string DeviceManufacturer;
+            public string DeviceFriendlyName;
+            public string DeviceLocationInfo;
+            public string ContainerID;
+            public string VID;
+            public string PID;
+            public string MI;
+
+        }
+
+
         static DEVPROPKEY DEVPKEY_Device_BusReportedDeviceDesc;
 
         static Win32DeviceMgmt()
@@ -364,7 +387,7 @@ namespace USBDevDescriptorAccess
             }
             return devices;
         }
-
+        
         public static List<DeviceInfo> GetAllUSBDEvices()
         {
             Guid[] guids = GetClassGUIDs("Ports");
@@ -413,6 +436,79 @@ namespace USBDevDescriptorAccess
             return devices;
         }
 
+        //DeviceInfoAdvanced
+        public static List<DeviceInfoAdvanced> GetAllUSBDEvicesADvacned()
+        {
+            StringBuilder devIDStrBuilder = new StringBuilder(260);
+            List<DeviceInfoAdvanced> devices = new List<DeviceInfoAdvanced>();
+            IntPtr hDeviceInfoSet = SetupDiGetClassDevs(IntPtr.Zero, "USB", 0, DiGetClassFlags.DIGCF_PRESENT | DiGetClassFlags.DIGCF_ALLCLASSES);
+            if (hDeviceInfoSet == IntPtr.Zero)
+            {
+                Console.WriteLine(" SetupDiGetClassDevs failed ");
+            }
+
+            try
+            {
+                UInt32 iMemberIndex = 0;
+                while (true)
+                {
+                    SP_DEVINFO_DATA deviceInfoData = new SP_DEVINFO_DATA();
+                    deviceInfoData.cbSize = (uint)Marshal.SizeOf(typeof(SP_DEVINFO_DATA));
+                    bool success = SetupDiEnumDeviceInfo(hDeviceInfoSet, iMemberIndex, ref deviceInfoData);
+                    if (!success)
+                    {
+                        // No more devices in the device information set
+                        break;
+                    }
+
+                    DeviceInfoAdvanced deviceInfo = new DeviceInfoAdvanced();
+                    if (CM_Get_Device_ID(deviceInfoData.DevInst, devIDStrBuilder, 260, 0) != 0)
+                        continue;
+
+                    Console.WriteLine("CM_Get_Device_ID:{0}", devIDStrBuilder.ToString());
+
+
+                    //deviceInfo.DeviceDescription
+                    //SetupDiGetDeviceRegistryProperty(,,SPDRP_DEVICEDESC)
+
+                    //deviceInfo.HardwareIDs
+
+
+                    //deviceInfo.BusRprtedDevDesc
+
+
+                    //deviceInfo.DeviceManufacturer
+
+
+                    //deviceInfo.DeviceFriendlyName
+
+
+                    //deviceInfo.DeviceLocationInfo
+
+
+                    //deviceInfo.ContainerID
+
+
+                    //deviceInfo.VID
+
+
+                    //deviceInfo.PID
+
+
+                    //deviceInfo.MI
+
+
+                    devices.Add(deviceInfo);
+                    iMemberIndex++;
+                }
+            }
+            finally
+            {
+                SetupDiDestroyDeviceInfoList(hDeviceInfoSet);
+            }
+
+            return devices;
+        }
 
         private static string GetDeviceName(IntPtr pDevInfoSet, SP_DEVINFO_DATA deviceInfoData)
         {

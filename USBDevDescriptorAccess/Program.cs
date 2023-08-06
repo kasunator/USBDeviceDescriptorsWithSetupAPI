@@ -9,7 +9,8 @@ namespace USBDevDescriptorAccess
         {
             Console.WriteLine("Hello World!");
             //Win32DeviceMgmt.GetAllCOMPorts();
-            Win32DeviceMgmt.GetAllUSBDEvices();
+            //Win32DeviceMgmt.GetAllUSBDEvices();
+            Win32DeviceMgmt.GetAllUSBDEvicesADvacned();
         }
     }
 }
