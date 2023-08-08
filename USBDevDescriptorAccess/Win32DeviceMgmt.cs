@@ -176,9 +176,34 @@ namespace USBDevDescriptorAccess
 
                     Console.WriteLine("CM_Get_Device_ID:{0}", devIDStrBuilder.ToString());
 
+                    /*
+                     *  [in]            HDEVINFO         DeviceInfoSet, //A handle to a device information set that contains a device information element
+                                                                that represents the device for which to retrieve a Plug and Play property.
+                        [in]            PSP_DEVINFO_DATA DeviceInfoData, //A pointer to an SP_DEVINFO_DATA structure that specifies the device information element in DeviceInfoSet.
+                        [in]            DWORD            Property,
+                        [out, optional] PDWORD           PropertyRegDataType,
+                        [out, optional] PBYTE            PropertyBuffer,
+                        [in]            DWORD            PropertyBufferSize,
+                        [out, optional] PDWORD           RequiredSize
+                    */
 
+                    UInt32 PropertyRegDataType;
+                    byte[] DevDescByteArray = new byte[1024];
+                    UInt32 PropertyRegRequiredSize;
                     //deviceInfo.DeviceDescription
-                    //SetupDiGetDeviceRegistryProperty(,,SPDRP_DEVICEDESC)
+                    /*
+                    *       public static extern bool SetupDiGetDeviceRegistryProperty(
+                            IntPtr DeviceInfoSet,
+                            ref SP_DEVINFO_DATA DeviceInfoData,
+                            SPDRP Property,
+                            out UInt32 PropertyRegDataType,
+                            byte[] PropertyBuffer,
+                            uint PropertyBufferSize,
+                            out UInt32 RequiredSize);
+                    */
+
+
+                    SetupAPI.SetupDiGetDeviceRegistryProperty(hDeviceInfoSet, ref deviceInfoData, SetupAPI.SPDRP.SPDRP_DEVICEDESC, out PropertyRegDataType, DevDescByteArray, (uint) DevDescByteArray.Length , out PropertyRegRequiredSize);
 
                     //deviceInfo.HardwareIDs
 
@@ -222,30 +247,30 @@ namespace USBDevDescriptorAccess
         private static string GetDeviceName(IntPtr pDevInfoSet, SetupAPI.SP_DEVINFO_DATA deviceInfoData)
         {
             IntPtr hDeviceRegistryKey = SetupAPI.SetupDiOpenDevRegKey(pDevInfoSet, ref deviceInfoData,
-                SetupAPI.DICS_FLAG_GLOBAL, 0, SetupAPI.DIREG_DEV, SetupAPI.KEY_QUERY_VALUE);
+            SetupAPI.DICS_FLAG_GLOBAL, 0, SetupAPI.DIREG_DEV, SetupAPI.KEY_QUERY_VALUE);
             if (hDeviceRegistryKey == IntPtr.Zero)
             {
-                //throw new Exception("Failed to open a registry key for device-specific configuration information");
-                Console.WriteLine("Failed to open a registry key for device-specific configuration information");
-                return "";
+            //throw new Exception("Failed to open a registry key for device-specific configuration information");
+            Console.WriteLine("Failed to open a registry key for device-specific configuration information");
+            return "";
             }
 
             byte[] ptrBuf = new byte[SetupAPI.BUFFER_SIZE];
             uint length = (uint)ptrBuf.Length;
             try
             {
-                uint lpRegKeyType;
-                int result = SetupAPI.RegQueryValueEx(hDeviceRegistryKey, "PortName", 0, out lpRegKeyType, ptrBuf, ref length);
-                if (result != 0)
-                {
-                    //throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
-                    Console.WriteLine("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
-                    return "";
-                }
+            uint lpRegKeyType;
+            int result = SetupAPI.RegQueryValueEx(hDeviceRegistryKey, "PortName", 0, out lpRegKeyType, ptrBuf, ref length);
+            if (result != 0)
+            {
+            //throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+            Console.WriteLine("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+            return "";
+            }
             }
             finally
             {
-                SetupAPI.RegCloseKey(hDeviceRegistryKey);
+            SetupAPI.RegCloseKey(hDeviceRegistryKey);
             }
 
             return Encoding.Unicode.GetString(ptrBuf, 0, (int)length - utf16terminatorSize_bytes);
@@ -257,12 +282,12 @@ namespace USBDevDescriptorAccess
             uint propRegDataType;
             uint RequiredSize;
             bool success = SetupAPI.SetupDiGetDeviceRegistryProperty(hDeviceInfoSet, ref deviceInfoData, SetupAPI.SPDRP.SPDRP_DEVICEDESC,
-                out propRegDataType, ptrBuf, SetupAPI.BUFFER_SIZE, out RequiredSize);
+            out propRegDataType, ptrBuf, SetupAPI.BUFFER_SIZE, out RequiredSize);
             if (!success)
             {
                 // throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
                 Console.WriteLine("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
-                return "";
+                 return "";
             }
             return Encoding.Unicode.GetString(ptrBuf, 0, (int)RequiredSize - utf16terminatorSize_bytes);
         }
@@ -273,7 +298,7 @@ namespace USBDevDescriptorAccess
             uint propRegDataType;
             uint RequiredSize;
             bool success = SetupAPI.SetupDiGetDevicePropertyW(hDeviceInfoSet, ref deviceInfoData, ref DEVPKEY_Device_BusReportedDeviceDesc,
-                out propRegDataType, ptrBuf, SetupAPI.BUFFER_SIZE, out RequiredSize, 0);
+            out propRegDataType, ptrBuf, SetupAPI.BUFFER_SIZE, out RequiredSize, 0);
             if (!success)
             {
                 //throw new Exception("Can not read Bus provided device description device " + deviceInfoData.ClassGuid);
@@ -300,7 +325,7 @@ namespace USBDevDescriptorAccess
             else
                 throw new System.ComponentModel.Win32Exception();
 
-            return guidArray;
+                return guidArray;
         }
     }
 

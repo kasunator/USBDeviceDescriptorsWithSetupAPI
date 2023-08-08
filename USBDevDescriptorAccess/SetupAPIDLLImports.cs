@@ -19,6 +19,11 @@ namespace SetupAPIDLLImports
         /// <summary>
         /// Device registry property codes
         /// </summary>
+        /// 
+        /*
+         * This enum is defined to be equivalent to the #defines SPDRP_X  (0x ) in the SetupAPI.h 
+         * SPDRP means ?: SetuP Device Registry Property ? 
+         */
         public enum SPDRP : uint
         {
             /// <summary>
@@ -313,6 +318,20 @@ namespace SetupAPIDLLImports
         /// <param Name="PropertyBufferSize">Size of the buffer, in bytes.</param>
         /// <param Name="RequiredSize">Pointer to a variable that receives the required buffer size, in bytes. This parameter can be NULL.</param>
         /// <returns>If the function succeeds, the return value is nonzero.</returns>
+        /// 
+        /*
+         * The SetupDiGetDeviceRegistryProperty function retrieves a specified Plug and Play device property.
+         * BOOL SetupDiGetDeviceRegistryProperty(
+            [in]            HDEVINFO         DeviceInfoSet, //A handle to a device information set that contains a device information element
+                                                                that represents the device for which to retrieve a Plug and Play property.
+            [in]            PSP_DEVINFO_DATA DeviceInfoData, //A pointer to an SP_DEVINFO_DATA structure that specifies the device information element in DeviceInfoSet.
+            [in]            DWORD            Property,
+            [out, optional] PDWORD           PropertyRegDataType,
+            [out, optional] PBYTE            PropertyBuffer,
+            [in]            DWORD            PropertyBufferSize,
+            [out, optional] PDWORD           RequiredSize
+            );
+        */
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool SetupDiGetDeviceRegistryProperty(
             IntPtr DeviceInfoSet,
