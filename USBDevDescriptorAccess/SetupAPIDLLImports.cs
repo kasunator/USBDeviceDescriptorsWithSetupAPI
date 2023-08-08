@@ -206,7 +206,7 @@ namespace SetupAPIDLLImports
         public const UInt32 KEY_QUERY_VALUE = 0x0001;
 
         /// <summary>
-        /// The SP_DEVINFO_DATA structure defines a device instance that is a member of a device information set.
+        /// The SP_DEVINFO_DATA structure references a device instance that is a member of a device information set.
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         public struct SP_DEVINFO_DATA
@@ -229,23 +229,51 @@ namespace SetupAPIDLLImports
         [DllImport("setupapi.dll")]
         public static extern Int32 SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
 
-        [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern bool SetupDiEnumDeviceInfo(IntPtr DeviceInfoSet, UInt32 MemberIndex, ref SP_DEVINFO_DATA DeviceInterfaceData);
 
+        /* Retrieve a device information set for the devices in a specified class. 
+            WINSETUPAPI HDEVINFO SetupDiGetClassDevsW(
+                [in, optional] const GUID *ClassGuid,
+                [in, optional] PCWSTR     Enumerator,
+                [in, optional] HWND       hwndParent,
+                [in]           DWORD      Flags
+                );
+             
+        */
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern IntPtr SetupDiGetClassDevs(ref Guid gClass, UInt32 iEnumerator, UInt32 hParent, DiGetClassFlags nFlags);
-
-        [DllImport("setupapi.dll", SetLastError = true)]
-        public static extern IntPtr SetupDiGetClassDevs(IntPtr gClass, UInt32 iEnumerator, UInt32 hParent, DiGetClassFlags nFlags);
-
+        /* use this overloade when we want to pass GUID NULL , by passing IntPtr.zero */
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern IntPtr SetupDiGetClassDevs(IntPtr gClass, [MarshalAs(UnmanagedType.LPTStr)] string iEnumerator, UInt32 hParent, DiGetClassFlags nFlags);
 
+        /*======END================================================================= */
+
+        /*The SetupDiEnumDeviceInfo function returns a SP_DEVINFO_DATA structure that specifies a device information element in a device information set.
+             BOOL SetupDiEnumDeviceInfo(
+            [in]  HDEVINFO         DeviceInfoSet,
+            [in]  DWORD            MemberIndex,
+            [out] PSP_DEVINFO_DATA DeviceInfoData
+            );
+             
+             */
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern bool SetupDiEnumDeviceInfo(IntPtr DeviceInfoSet, UInt32 MemberIndex, ref SP_DEVINFO_DATA DeviceInterfaceData);
+        /* ======END===================================================================*/
+
+        /*The CM_Get_Device_ID function retrieves the device instance ID string for a specified device instance on the local machine.
+         * CONFIGRET CM_Get_Device_IDW(
+            [in]  DEVINST dnDevInst, //this hould be the SP_DEVINFO_DATA.DevInst that we took from calling SetupDiEnumDeviceInfo 
+            [out] PWSTR Buffer, //The device ID string will be loaded into this buffer
+            [in]  ULONG BufferLen,
+            [in]  ULONG ulFlags
+             );
+             if the operation succeeds, the function returns CR_SUCCESS
+        */
         // [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         // static extern int CM_Get_Device_ID(IntPtr pdnDevInst, IntPtr buffer, uint bufferLen, uint flags);
 
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern int CM_Get_Device_ID(UInt32 pdnDevInst, StringBuilder buffer, uint bufferLen, uint flags);
+        /*===END=======================================================================*/
 
         [DllImport("Setupapi", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern IntPtr SetupDiOpenDevRegKey(IntPtr hDeviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, uint scope,

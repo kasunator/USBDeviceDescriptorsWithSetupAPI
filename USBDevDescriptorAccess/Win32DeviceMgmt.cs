@@ -10,6 +10,11 @@ namespace USBDevDescriptorAccess
     {
         const int utf16terminatorSize_bytes = 2;
 
+        public enum StringLength: uint
+        {
+            MAX_PATH = 260,
+        }
+
         public struct DeviceInfo
         {
             public string name;
@@ -143,6 +148,7 @@ namespace USBDevDescriptorAccess
         {
             StringBuilder devIDStrBuilder = new StringBuilder(260);
             List<DeviceInfoAdvanced> devices = new List<DeviceInfoAdvanced>();
+            /* get an Hardware device info handle for devices enumarated as "USB" */
             IntPtr hDeviceInfoSet = SetupAPI.SetupDiGetClassDevs(IntPtr.Zero, "USB", 0, SetupAPI.DiGetClassFlags.DIGCF_PRESENT | SetupAPI.DiGetClassFlags.DIGCF_ALLCLASSES);
             if (hDeviceInfoSet == IntPtr.Zero)
             {
@@ -156,6 +162,7 @@ namespace USBDevDescriptorAccess
                 {
                     SetupAPI.SP_DEVINFO_DATA deviceInfoData = new SetupAPI.SP_DEVINFO_DATA();
                     deviceInfoData.cbSize = (uint)Marshal.SizeOf(typeof(SetupAPI.SP_DEVINFO_DATA));
+                    /* get the device information data structure i.e SP_DEVINFO_DATA from the device information set for the correspoinding device index */
                     bool success = SetupAPI.SetupDiEnumDeviceInfo(hDeviceInfoSet, iMemberIndex, ref deviceInfoData);
                     if (!success)
                     {
@@ -164,7 +171,7 @@ namespace USBDevDescriptorAccess
                     }
 
                     DeviceInfoAdvanced deviceInfo = new DeviceInfoAdvanced();
-                    if (SetupAPI.CM_Get_Device_ID(deviceInfoData.DevInst, devIDStrBuilder, 260, 0) != 0)
+                    if (SetupAPI.CM_Get_Device_ID(deviceInfoData.DevInst, devIDStrBuilder, (uint) StringLength.MAX_PATH, 0) != 0)
                         continue;
 
                     Console.WriteLine("CM_Get_Device_ID:{0}", devIDStrBuilder.ToString());
