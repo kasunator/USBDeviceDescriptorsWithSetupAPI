@@ -203,8 +203,18 @@ namespace USBDevDescriptorAccess
                     */
 
 
-                    SetupAPI.SetupDiGetDeviceRegistryProperty(hDeviceInfoSet, ref deviceInfoData, SetupAPI.SPDRP.SPDRP_DEVICEDESC, out PropertyRegDataType, DevDescByteArray, (uint) DevDescByteArray.Length , out PropertyRegRequiredSize);
-
+                    if (SetupAPI.SetupDiGetDeviceRegistryProperty(hDeviceInfoSet, ref deviceInfoData,
+                                                                SetupAPI.SPDRP.SPDRP_DEVICEDESC, out PropertyRegDataType,
+                                                                DevDescByteArray, (uint)DevDescByteArray.Length,
+                                                                out PropertyRegRequiredSize) == true)
+                    {
+                        string devDescriptorStr = Encoding.Unicode.GetString(DevDescByteArray, 0, (int)PropertyRegRequiredSize - utf16terminatorSize_bytes);
+                        Console.WriteLine("device Descriptor {0}", devDescriptorStr);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Get Device Registry Property DEVICEDESC failed");
+                    }
                     //deviceInfo.HardwareIDs
 
 
