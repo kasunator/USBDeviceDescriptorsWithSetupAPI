@@ -232,7 +232,7 @@ namespace SetupAPIDLLImports
 
 
         [DllImport("setupapi.dll")]
-        public static extern Int32 SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
+        public static extern bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
 
 
         /* Retrieve a device information set for the devices in a specified class. 
@@ -341,6 +341,7 @@ namespace SetupAPIDLLImports
             byte[] PropertyBuffer,
             uint PropertyBufferSize,
             out UInt32 RequiredSize);
+        /*====== END=======================================================*/
 
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiGetDevicePropertyW(

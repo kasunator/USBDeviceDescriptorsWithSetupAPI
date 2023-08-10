@@ -302,7 +302,14 @@ namespace USBDevDescriptorAccess
             }
             finally
             {
-                SetupAPI.SetupDiDestroyDeviceInfoList(hDeviceInfoSet);
+                if (SetupAPI.SetupDiDestroyDeviceInfoList(hDeviceInfoSet) ==  true)
+                {
+                    Console.WriteLine("Destroy Device Info List successful");
+                }
+                else
+                {
+                    Console.WriteLine("Destroy Device Info List Failed");
+                }
             }
 
             return devices;
