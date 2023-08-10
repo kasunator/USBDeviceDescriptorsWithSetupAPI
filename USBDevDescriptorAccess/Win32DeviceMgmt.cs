@@ -24,7 +24,7 @@ namespace USBDevDescriptorAccess
 
         public struct DeviceInfoAdvanced
         {
-            public string CM_Get_Device_ID;
+            public string DeviceInstanceID;
             public string DeviceDescription;
             public string HardwareIDs;
             public string BusRprtedDevDesc;
@@ -172,53 +172,29 @@ namespace USBDevDescriptorAccess
                     }
 
                     DeviceInfoAdvanced deviceInfo = new DeviceInfoAdvanced();
-                    /*   if (SetupAPI.CM_Get_Device_ID(deviceInfoData.DevInst, devIDStrBuilder, (uint) StringLength.MAX_PATH, 0) != 0)
-                            continue;
-                        deviceInfo.CM_Get_Device_ID = devIDStrBuilder.ToString();
-                        Console.WriteLine("CM_Get_Device_ID:{0}", deviceInfo.CM_Get_Device_ID);
-                    */
-                    if (GetDeviceID(deviceInfoData, out deviceInfo.CM_Get_Device_ID) != true)
+
+
+                    //deviceInfo.CM_Get_Device_ID;
+                    if (GetDeviceID(deviceInfoData, out deviceInfo.DeviceInstanceID) != true)
                     { 
                         continue;
                     }
-                    Console.WriteLine("CM_Get_Device_ID:{0}", deviceInfo.CM_Get_Device_ID);
+                    Console.WriteLine("CM_Get_Device_ID, aka DeviceInstanceID:{0}", deviceInfo.DeviceInstanceID);
 
-
-                    /*
-                     *  [in]            HDEVINFO         DeviceInfoSet, //A handle to a device information set that contains a device information element
-                                                                that represents the device for which to retrieve a Plug and Play property.
-                        [in]            PSP_DEVINFO_DATA DeviceInfoData, //A pointer to an SP_DEVINFO_DATA structure that specifies the device information element in DeviceInfoSet.
-                        [in]            DWORD            Property,
-                        [out, optional] PDWORD           PropertyRegDataType,
-                        [out, optional] PBYTE            PropertyBuffer,
-                        [in]            DWORD            PropertyBufferSize,
-                        [out, optional] PDWORD           RequiredSize
-                    */
-                    //deviceInfo.DeviceDescription
-#if USE_NEW
-                    UInt32 PropertyRegDataType;
-                    byte[] DevDescByteArray = new byte[1024];
-                    UInt32 PropertyRegRequiredSize;
-
-                    if (SetupAPI.SetupDiGetDeviceRegistryProperty(hDeviceInfoSet, ref deviceInfoData,
-                                                                SetupAPI.SPDRP.SPDRP_DEVICEDESC, out PropertyRegDataType,
-                                                                DevDescByteArray, (uint)DevDescByteArray.Length,
-                                                                out PropertyRegRequiredSize) == true)
-                    {
-                        string devDescriptorStr = Encoding.Unicode.GetString(DevDescByteArray, 0, (int)PropertyRegRequiredSize - utf16terminatorSize_bytes);
-                        Console.WriteLine("device Descriptor {0}", devDescriptorStr);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Get Device Registry Property DEVICEDESC failed");
-                    }
-#endif //USE_NEW
+                    //deviceInfo.DeviceDescription;
                     deviceInfo.DeviceDescription = GetDeviceDescription(hDeviceInfoSet, deviceInfoData);
                     Console.WriteLine("Device Description:{0}", deviceInfo.DeviceDescription);
 
                     //deviceInfo.HardwareIDs
+                    deviceInfo.HardwareIDs = GetHardwareID(hDeviceInfoSet, deviceInfoData);
 
-
+                    string[] hardWareIDArray = deviceInfo.HardwareIDs.Split('\0');
+                    Console.WriteLine("HardwareIDs:");
+                    foreach( string hardwareID in hardWareIDArray)
+                    {
+                        if (hardwareID.Length > 1)
+                            Console.WriteLine("       " + hardwareID);
+                    }
                     //deviceInfo.BusRprtedDevDesc
 
 
@@ -267,6 +243,38 @@ namespace USBDevDescriptorAccess
             return true;
         }
 
+        private static string GetDeviceDescription(IntPtr hDeviceInfoSet, SetupAPI.SP_DEVINFO_DATA deviceInfoData)
+        {
+            byte[] ptrBuf = new byte[SetupAPI.BUFFER_SIZE];
+            uint propRegDataType;
+            uint RequiredSize;
+            bool success = SetupAPI.SetupDiGetDeviceRegistryProperty(hDeviceInfoSet, ref deviceInfoData, SetupAPI.SPDRP.SPDRP_DEVICEDESC,
+            out propRegDataType, ptrBuf, SetupAPI.BUFFER_SIZE, out RequiredSize);
+            if (!success)
+            {
+                // throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                Console.WriteLine("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                return "";
+            }
+            return Encoding.Unicode.GetString(ptrBuf, 0, (int)RequiredSize - utf16terminatorSize_bytes);
+        }
+
+
+        private static string GetHardwareID(IntPtr hDeviceInfoSet, SetupAPI.SP_DEVINFO_DATA deviceInfoData)
+        {
+            byte[] ptrBuf = new byte[SetupAPI.BUFFER_SIZE];
+            uint propRegDataType;
+            uint RequiredSize;
+            bool success = SetupAPI.SetupDiGetDeviceRegistryProperty(hDeviceInfoSet, ref deviceInfoData, SetupAPI.SPDRP.SPDRP_HARDWAREID,
+            out propRegDataType, ptrBuf, SetupAPI.BUFFER_SIZE, out RequiredSize);
+            if (!success)
+            {
+                // throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                Console.WriteLine("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                return "";
+            }
+            return Encoding.Unicode.GetString(ptrBuf, 0, (int)RequiredSize - utf16terminatorSize_bytes);
+        }
 
         private static string GetDeviceName(IntPtr pDevInfoSet, SetupAPI.SP_DEVINFO_DATA deviceInfoData)
         {
@@ -300,21 +308,7 @@ namespace USBDevDescriptorAccess
             return Encoding.Unicode.GetString(ptrBuf, 0, (int)length - utf16terminatorSize_bytes);
         }
 
-        private static string GetDeviceDescription(IntPtr hDeviceInfoSet, SetupAPI.SP_DEVINFO_DATA deviceInfoData)
-        {
-            byte[] ptrBuf = new byte[SetupAPI.BUFFER_SIZE];
-            uint propRegDataType;
-            uint RequiredSize;
-            bool success = SetupAPI.SetupDiGetDeviceRegistryProperty(hDeviceInfoSet, ref deviceInfoData, SetupAPI.SPDRP.SPDRP_DEVICEDESC,
-            out propRegDataType, ptrBuf, SetupAPI.BUFFER_SIZE, out RequiredSize);
-            if (!success)
-            {
-                // throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
-                Console.WriteLine("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
-                 return "";
-            }
-            return Encoding.Unicode.GetString(ptrBuf, 0, (int)RequiredSize - utf16terminatorSize_bytes);
-        }
+
 
         private static string GetDeviceBusDescription(IntPtr hDeviceInfoSet, SetupAPI.SP_DEVINFO_DATA deviceInfoData)
         {
