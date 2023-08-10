@@ -40,6 +40,7 @@ namespace USBDevDescriptorAccess
 
 
         static SetupAPI.DEVPROPKEY DEVPKEY_Device_BusReportedDeviceDesc;
+        static SetupAPI.DEVPROPKEY DEVPKEY_Device_Manufacturer;
 
         static Win32DeviceMgmt()
         {
@@ -55,6 +56,12 @@ namespace USBDevDescriptorAccess
             DEVPKEY_Device_BusReportedDeviceDesc.pid = 4;
         }
 
+        static void iniDEVPKEY_Device_Manufacturer()
+        {
+            DEVPKEY_Device_Manufacturer = new SetupAPI.DEVPROPKEY();
+            DEVPKEY_Device_Manufacturer.fmtid = new Guid(0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0);
+            DEVPKEY_Device_Manufacturer.pid = 13;
+        }
 
         public static List<DeviceInfo> GetAllCOMPorts()
         {
@@ -158,7 +165,7 @@ namespace USBDevDescriptorAccess
             StringBuilder devIDStrBuilder = new StringBuilder(260);
             /* populate the BusReportedDevieDesc with the corresponding GUID devpkey.h */
             initDEVPKEY_Device_BusReportedDeviceDesc();
-
+            iniDEVPKEY_Device_Manufacturer();
 
             List<DeviceInfoAdvanced> devices = new List<DeviceInfoAdvanced>();
             /* get an Hardware device info handle for devices enumarated as "USB" */
@@ -210,8 +217,10 @@ namespace USBDevDescriptorAccess
                     //deviceInfo.BusRprtedDevDesc
                     deviceInfo.BusRprtedDevDesc = GetDeviceBusDescription(hDeviceInfoSet, deviceInfoData);
                     Console.WriteLine("Bus Reported Dev Descriptor:{0}",deviceInfo.BusRprtedDevDesc);
-                    //deviceInfo.DeviceManufacturer
 
+                    //deviceInfo.DeviceManufacturer
+                    deviceInfo.DeviceManufacturer = GetDeviceManufacturer(hDeviceInfoSet, deviceInfoData);
+                    Console.WriteLine("Device Manufacturer:{0}", deviceInfo.DeviceManufacturer);
 
                     //deviceInfo.DeviceFriendlyName
 
@@ -299,6 +308,22 @@ namespace USBDevDescriptorAccess
             {
                 //throw new Exception("Can not read Bus provided device description device " + deviceInfoData.ClassGuid);
                 Console.WriteLine("Can not read SetupDiGetDevicePropertyW for DEVPKEY_Device_BusReportedDeviceDesc " + deviceInfoData.ClassGuid);
+                return "";
+            }
+            return System.Text.UnicodeEncoding.Unicode.GetString(ptrBuf, 0, (int)RequiredSize - utf16terminatorSize_bytes);
+        }
+  
+        private static string GetDeviceManufacturer(IntPtr hDeviceInfoSet, SetupAPI.SP_DEVINFO_DATA deviceInfoData)
+        {
+            byte[] ptrBuf = new byte[SetupAPI.BUFFER_SIZE];
+            uint propRegDataType;
+            uint RequiredSize;
+            bool success = SetupAPI.SetupDiGetDevicePropertyW(hDeviceInfoSet, ref deviceInfoData, ref DEVPKEY_Device_Manufacturer,
+            out propRegDataType, ptrBuf, SetupAPI.BUFFER_SIZE, out RequiredSize, 0);
+            if (!success)
+            {
+                //throw new Exception("Can not read Bus provided device description device " + deviceInfoData.ClassGuid);
+                Console.WriteLine("Can not read SetupDiGetDevicePropertyW for DEVPKEY_Device_Manufacturer " + deviceInfoData.ClassGuid);
                 return "";
             }
             return System.Text.UnicodeEncoding.Unicode.GetString(ptrBuf, 0, (int)RequiredSize - utf16terminatorSize_bytes);
