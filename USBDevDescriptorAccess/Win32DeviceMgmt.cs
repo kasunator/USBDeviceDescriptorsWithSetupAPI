@@ -259,14 +259,42 @@ namespace USBDevDescriptorAccess
                     //deviceInfo.ContainerID
                     deviceInfo.ContainerID = GetDeviceContainerID(hDeviceInfoSet, deviceInfoData);
                     Console.WriteLine("Device Container ID:{0}", deviceInfo.ContainerID);
+
+                    string[] splitStringArray = deviceInfo.DeviceInstanceID.Split('&');
                     //deviceInfo.VID
-
-
+                    /* we look for index of "VID_" then extract index+4 to end*/
+                    if (splitStringArray.Length >= 1)
+                    {
+                        int VID_index = splitStringArray[0].IndexOf("VID_");
+                        if (VID_index > -1)
+                        {
+                            deviceInfo.VID = splitStringArray[0].Substring(VID_index + "VID_".Length, 3);
+                            Console.WriteLine("VID:{0}", deviceInfo.VID);
+                        }
+                    }
                     //deviceInfo.PID
-
+                    /* we look for index of "PID_" then extract index+4 to end*/
+                    if (splitStringArray.Length >= 2)
+                    {
+                        int PID_index = splitStringArray[1].IndexOf("PID_");
+                        if (PID_index > -1)
+                        {
+                            deviceInfo.PID = splitStringArray[1].Substring(PID_index + "PID_".Length, 3);
+                            Console.WriteLine("PID:{0}", deviceInfo.PID);
+                        }
+                    }
 
                     //deviceInfo.MI
-
+                    /* we look for index of "MI_" then extract index+4 to end*/
+                    if (splitStringArray.Length >= 3)
+                    {
+                        int MI_index = splitStringArray[2].IndexOf("MI_");
+                        if (MI_index > -1)
+                        {
+                            deviceInfo.MI = splitStringArray[2].Substring(MI_index + "MI_".Length, 2);
+                            Console.WriteLine("MI:{0}", deviceInfo.MI);
+                        }
+                    }
 
                     devices.Add(deviceInfo);
                     iMemberIndex++;
