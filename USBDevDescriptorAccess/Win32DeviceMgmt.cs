@@ -268,7 +268,7 @@ namespace USBDevDescriptorAccess
                         int VID_index = splitStringArray[0].IndexOf("VID_");
                         if (VID_index > -1)
                         {
-                            deviceInfo.VID = splitStringArray[0].Substring(VID_index + "VID_".Length, 3);
+                            deviceInfo.VID = splitStringArray[0].Substring(VID_index + "VID_".Length, 4);
                             Console.WriteLine("VID:{0}", deviceInfo.VID);
                         }
                     }
@@ -279,7 +279,7 @@ namespace USBDevDescriptorAccess
                         int PID_index = splitStringArray[1].IndexOf("PID_");
                         if (PID_index > -1)
                         {
-                            deviceInfo.PID = splitStringArray[1].Substring(PID_index + "PID_".Length, 3);
+                            deviceInfo.PID = splitStringArray[1].Substring(PID_index + "PID_".Length, 4);
                             Console.WriteLine("PID:{0}", deviceInfo.PID);
                         }
                     }
@@ -449,34 +449,31 @@ namespace USBDevDescriptorAccess
             SetupAPI.DICS_FLAG_GLOBAL, 0, SetupAPI.DIREG_DEV, SetupAPI.KEY_QUERY_VALUE);
             if (hDeviceRegistryKey == IntPtr.Zero)
             {
-            //throw new Exception("Failed to open a registry key for device-specific configuration information");
-            Console.WriteLine("Failed to open a registry key for device-specific configuration information");
-            return "";
+                //throw new Exception("Failed to open a registry key for device-specific configuration information");
+                Console.WriteLine("Failed to open a registry key for device-specific configuration information");
+                return "";
             }
 
             byte[] ptrBuf = new byte[SetupAPI.BUFFER_SIZE];
             uint length = (uint)ptrBuf.Length;
             try
             {
-            uint lpRegKeyType;
-            int result = SetupAPI.RegQueryValueEx(hDeviceRegistryKey, "PortName", 0, out lpRegKeyType, ptrBuf, ref length);
-            if (result != 0)
-            {
-            //throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
-            Console.WriteLine("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
-            return "";
-            }
+                uint lpRegKeyType;
+                int result = SetupAPI.RegQueryValueEx(hDeviceRegistryKey, "PortName", 0, out lpRegKeyType, ptrBuf, ref length);
+                if (result != 0)
+                {
+                    //throw new Exception("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                    Console.WriteLine("Can not read registry value PortName for device " + deviceInfoData.ClassGuid);
+                    return "";
+                }
             }
             finally
             {
-            SetupAPI.RegCloseKey(hDeviceRegistryKey);
+                SetupAPI.RegCloseKey(hDeviceRegistryKey);
             }
 
             return Encoding.Unicode.GetString(ptrBuf, 0, (int)length - utf16terminatorSize_bytes);
         }
-
-
-
 
 
         private static Guid[] GetClassGUIDs(string className)
