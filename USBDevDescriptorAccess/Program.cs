@@ -11,6 +11,7 @@ namespace USBDevDescriptorAccess
             //Win32DeviceMgmt.GetAllCOMPorts();
             //Win32DeviceMgmt.GetAllUSBDEvices();
             Win32DeviceMgmt.GetAllUSBDEvicesADvacned();
+            //Win32DeviceMgmt.GetAllUsbHidDEvices();
         }
     }
 }

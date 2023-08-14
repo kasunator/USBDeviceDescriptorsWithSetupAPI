@@ -246,6 +246,10 @@ namespace SetupAPIDLLImports
         */
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern IntPtr SetupDiGetClassDevs(ref Guid gClass, UInt32 iEnumerator, UInt32 hParent, DiGetClassFlags nFlags);
+
+        [DllImport("setupapi.dll", SetLastError = true)]
+        public static extern IntPtr SetupDiGetClassDevs(ref Guid gClass, IntPtr iEnumerator, IntPtr hParent, DiGetClassFlags nFlags);
+
         /* use this overloade when we want to pass GUID NULL , by passing IntPtr.zero */
         [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern IntPtr SetupDiGetClassDevs(IntPtr gClass, [MarshalAs(UnmanagedType.LPTStr)] string iEnumerator, UInt32 hParent, DiGetClassFlags nFlags);
@@ -353,5 +357,8 @@ namespace SetupAPIDLLImports
             UInt32 propertyBufferSize,
             out UInt32 requiredSize,
             UInt32 flags);
+
+        [DllImport("Hid.dll", CharSet = CharSet.Auto, SetLastError = true )]
+        public static extern void HidD_GetHidGuid(out Guid HidGuid); 
     }
 }
