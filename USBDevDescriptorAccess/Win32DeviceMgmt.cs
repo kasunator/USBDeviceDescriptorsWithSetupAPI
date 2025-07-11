@@ -46,7 +46,7 @@ namespace USBDevDescriptorAccess
         static SetupAPI.DEVPROPKEY DEVPKEY_Device_ContainerId;
 
         static SetupAPI.DEVPROPKEY GUID_DEVCLASS_HIDCLASS;
-
+        /* these guids are defined inside devpkey.h at https://github.com/tpn/winsdk-10/blob/master/Include/10.0.16299.0/shared/devpkey.h */
         static Win32DeviceMgmt()
         {
             DEVPKEY_Device_BusReportedDeviceDesc = new SetupAPI.DEVPROPKEY();
@@ -335,6 +335,14 @@ namespace USBDevDescriptorAccess
             initDEVPKEY_Device_FriendlyName();
             initDEVPKEY_Device_LocationInfo();
             initDEVPKEY_Device_ContainerID();
+            /* HID class GUID this value can be found in the following location  
+             * https://learn.microsoft.com/en-us/windows-hardware/drivers/install/system-defined-device-setup-classes-available-to-vendors 
+              it include all the interactive input devices that are operated by the system supplied HID class driver. 
+              the corresponding class guid :745a17a0-74d3-11d0-b6fe-00a0c90f57da
+            
+             */
+
+
             //Guid(uint a, ushort b, ushort c, byte d, byte e, byte f, byte g, byte h, byte i, byte j, byte k);
             Guid guid_hid_class = new Guid(0x745a17a0, 0x74d3, 0x11d0, 0xb6, 0xfe, 0x00, 0xa0, 0xc9, 0x0f, 0x57, 0xda);
 
