@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
 using SetupAPIDLLImports;
+using System.Security.Cryptography.X509Certificates;
 
 namespace USBDevDescriptorAccess
 {
@@ -10,7 +11,7 @@ namespace USBDevDescriptorAccess
     {
         const int utf16terminatorSize_bytes = 2;
 
-        public enum StringLength: uint
+        public enum StringLength : uint
         {
             MAX_PATH = 260,
         }
@@ -89,7 +90,7 @@ namespace USBDevDescriptorAccess
             DEVPKEY_Device_ContainerId.pid = 2;
         }
 
- 
+
 
 
         public static List<DeviceInfo> GetAllCOMPorts()
@@ -120,14 +121,14 @@ namespace USBDevDescriptorAccess
                         }
 
                         DeviceInfo deviceInfo = new DeviceInfo();
- 
+
                         deviceInfo.name = GetDeviceName(hDeviceInfoSet, deviceInfoData);
                         deviceInfo.description = GetDeviceDescription(hDeviceInfoSet, deviceInfoData);
                         if (deviceInfo.name == "COM1")
                         {
                             deviceInfo.bus_description = GetDeviceBusDescription(hDeviceInfoSet, deviceInfoData);
                         }
-                            devices.Add(deviceInfo);
+                        devices.Add(deviceInfo);
 
                         iMemberIndex++;
                     }
@@ -139,13 +140,13 @@ namespace USBDevDescriptorAccess
             }
             return devices;
         }
-        
+
         public static List<DeviceInfo> GetAllUSBDEvices()
         {
             Guid[] guids = GetClassGUIDs("Ports");
             //Guid[] guids = GetClassGUIDs("COM");
             List<DeviceInfo> devices = new List<DeviceInfo>();
-            IntPtr hDeviceInfoSet = SetupAPI.SetupDiGetClassDevs( IntPtr.Zero,"USB", 0, SetupAPI.DiGetClassFlags.DIGCF_PRESENT| SetupAPI.DiGetClassFlags.DIGCF_ALLCLASSES );
+            IntPtr hDeviceInfoSet = SetupAPI.SetupDiGetClassDevs(IntPtr.Zero, "USB", 0, SetupAPI.DiGetClassFlags.DIGCF_PRESENT | SetupAPI.DiGetClassFlags.DIGCF_ALLCLASSES);
             if (hDeviceInfoSet == IntPtr.Zero)
             {
                 Console.WriteLine(" SetupDiGetClassDevs failed ");
@@ -171,7 +172,7 @@ namespace USBDevDescriptorAccess
                     deviceInfo.description = GetDeviceDescription(hDeviceInfoSet, deviceInfoData);
                     //if (deviceInfo.name == "COM1")
                     //{
-                        deviceInfo.bus_description = GetDeviceBusDescription(hDeviceInfoSet, deviceInfoData);
+                    deviceInfo.bus_description = GetDeviceBusDescription(hDeviceInfoSet, deviceInfoData);
                     //}
                     devices.Add(deviceInfo);
                     Console.WriteLine(" Device name: {0} ", deviceInfo.name);
@@ -184,7 +185,7 @@ namespace USBDevDescriptorAccess
             {
                 SetupAPI.SetupDiDestroyDeviceInfoList(hDeviceInfoSet);
             }
-            
+
             return devices;
         }
 
@@ -227,7 +228,7 @@ namespace USBDevDescriptorAccess
 
                     //deviceInfo.CM_Get_Device_ID;
                     if (GetDeviceID(deviceInfoData, out deviceInfo.DeviceInstanceID) != true)
-                    { 
+                    {
                         continue;
                     }
                     Console.WriteLine("************************");
@@ -246,14 +247,14 @@ namespace USBDevDescriptorAccess
 
                     string[] hardWareIDArray = deviceInfo.HardwareIDs.Split('\0');
                     Console.WriteLine("HardwareIDs:");
-                    foreach( string hardwareID in hardWareIDArray)
+                    foreach (string hardwareID in hardWareIDArray)
                     {
                         if (hardwareID.Length > 1)
                             Console.WriteLine("       " + hardwareID);
                     }
                     //deviceInfo.BusRprtedDevDesc
                     deviceInfo.BusRprtedDevDesc = GetDeviceBusDescription(hDeviceInfoSet, deviceInfoData);
-                    Console.WriteLine("Bus Reported Dev Descriptor:{0}",deviceInfo.BusRprtedDevDesc);
+                    Console.WriteLine("Bus Reported Dev Descriptor:{0}", deviceInfo.BusRprtedDevDesc);
 
                     //deviceInfo.DeviceManufacturer
                     deviceInfo.DeviceManufacturer = GetDeviceManufacturer(hDeviceInfoSet, deviceInfoData);
@@ -264,7 +265,7 @@ namespace USBDevDescriptorAccess
                     Console.WriteLine("Device Friendly Name:{0}", deviceInfo.DeviceFriendlyName);
 
                     //deviceInfo.DeviceLocationInfo
-                    deviceInfo.DeviceLocationInfo =  GetDeviceLocationInfo(hDeviceInfoSet, deviceInfoData);
+                    deviceInfo.DeviceLocationInfo = GetDeviceLocationInfo(hDeviceInfoSet, deviceInfoData);
                     Console.WriteLine("Device location info:{0}", deviceInfo.DeviceLocationInfo);
 
                     //deviceInfo.ContainerID
@@ -313,7 +314,7 @@ namespace USBDevDescriptorAccess
             }
             finally
             {
-                if (SetupAPI.SetupDiDestroyDeviceInfoList(hDeviceInfoSet) ==  true)
+                if (SetupAPI.SetupDiDestroyDeviceInfoList(hDeviceInfoSet) == true)
                 {
                     Console.WriteLine("Destroy Device Info List successful");
                 }
@@ -350,7 +351,7 @@ namespace USBDevDescriptorAccess
             //SetupAPI.HidD_GetHidGuid(out ghid);
             List<DeviceInfoAdvanced> devices = new List<DeviceInfoAdvanced>();
             /* get an Hardware device info handle for devices enumarated as "USB" */
-            IntPtr hDeviceInfoSet = SetupAPI.SetupDiGetClassDevs(ref guid_hid_class, IntPtr.Zero , IntPtr.Zero, SetupAPI.DiGetClassFlags.DIGCF_PRESENT );
+            IntPtr hDeviceInfoSet = SetupAPI.SetupDiGetClassDevs(ref guid_hid_class, IntPtr.Zero, IntPtr.Zero, SetupAPI.DiGetClassFlags.DIGCF_PRESENT);
             if (hDeviceInfoSet == IntPtr.Zero)
             {
                 Console.WriteLine(" SetupDiGetClassDevs failed ");
@@ -477,7 +478,7 @@ namespace USBDevDescriptorAccess
 
 
 
-        private static bool GetDeviceID(SetupAPI.SP_DEVINFO_DATA devInfoData ,out string device_id)
+        private static bool GetDeviceID(SetupAPI.SP_DEVINFO_DATA devInfoData, out string device_id)
         {
             StringBuilder devIDStrBuilder = new StringBuilder((int)StringLength.MAX_PATH);
             if (SetupAPI.CM_Get_Device_ID(devInfoData.DevInst, devIDStrBuilder, (uint)StringLength.MAX_PATH, 0) != 0)
@@ -552,7 +553,7 @@ namespace USBDevDescriptorAccess
             }
             return System.Text.UnicodeEncoding.Unicode.GetString(ptrBuf, 0, (int)RequiredSize - utf16terminatorSize_bytes);
         }
-  
+
         private static string GetDeviceManufacturer(IntPtr hDeviceInfoSet, SetupAPI.SP_DEVINFO_DATA deviceInfoData)
         {
             byte[] ptrBuf = new byte[SetupAPI.BUFFER_SIZE];
@@ -653,6 +654,41 @@ namespace USBDevDescriptorAccess
         }
 
 
+
+
+        public static void test_GetClassGUIDs()
+        {
+            Guid[] guid = GetClassGUIDs("PORTS");
+            if (guid?.Length != 0)
+            {
+                Console.WriteLine("GUID for PORT: {0}", guid[0].ToString());
+            }
+
+            guid = GetClassGUIDs("HIDClass");
+            if (guid?.Length != 0)
+            {
+                Console.WriteLine("GUID for HIDClass: {0}", guid[0].ToString());
+            }
+
+            guid = GetClassGUIDs("USBDevice");
+            if (guid?.Length != 0)
+            {
+                Console.WriteLine("GUID for USBDevice: {0}", guid[0].ToString());
+            }
+            //guid = GetClassGUIDs("USB");
+            //if (guid?.Length != 0)
+            //{
+            //    Console.WriteLine("GUID for USB: {0}", guid[0].ToString());
+            //}
+        }
+
+        /* This function gets the GUIDS for the class name passed in.
+        * This only works for GUIDs defined in System-defined device setup classes available to vendors
+        * As an example if you pass "PORTS" it will return the GUID 
+        * {4d36e978-e325-11ce-bfc1-08002be10318}, whcihs is associated with class name  Ports. 
+        * You can find a list of class names and associated GUID in the follwing link 
+        * https://learn.microsoft.com/en-us/windows-hardware/drivers/install/system-defined-device-setup-classes-available-to-vendors?source=recommendations
+            * */
         private static Guid[] GetClassGUIDs(string className)
         {
             UInt32 requiredSize = 0;
@@ -670,9 +706,29 @@ namespace USBDevDescriptorAccess
             else
                 throw new System.ComponentModel.Win32Exception();
 
-                return guidArray;
-        }
-    }
+            return guidArray;
 
+        }
+        /* This funtion test the SetupDiGetClassDevs() function with  "USB" passed in as the enumerator */
+        public static void test_SetupDiGetClassDevs_usb()
+        {
+            IntPtr hDeviceInfoSet = SetupAPI.SetupDiGetClassDevs(IntPtr.Zero, "USB", 0, SetupAPI.DiGetClassFlags.DIGCF_PRESENT | SetupAPI.DiGetClassFlags.DIGCF_ALLCLASSES);
+            if (hDeviceInfoSet == IntPtr.Zero)
+            {
+                Console.WriteLine(" SetupDiGetClassDevs failed ");
+            }
+        }
+
+        /* This funtion test the SetupDiGetClassDevs() function with  "PORT" passed in as the enumerator */
+        public static void test_SetupDiGetClassDevs_port()
+        {
+            IntPtr hDeviceInfoSet = SetupAPI.SetupDiGetClassDevs(IntPtr.Zero, "PORT", 0, SetupAPI.DiGetClassFlags.DIGCF_PRESENT | SetupAPI.DiGetClassFlags.DIGCF_ALLCLASSES);
+            if (hDeviceInfoSet == IntPtr.Zero)
+            {
+                Console.WriteLine(" SetupDiGetClassDevs failed ");
+            }
+        }
+
+    }
 
 }
