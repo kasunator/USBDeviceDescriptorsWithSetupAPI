@@ -338,9 +338,15 @@ namespace USBDevDescriptorAccess
             initDEVPKEY_Device_ContainerID();
             /* HID class GUID this value can be found in the following location  
              * https://learn.microsoft.com/en-us/windows-hardware/drivers/install/system-defined-device-setup-classes-available-to-vendors 
-              it include all the interactive input devices that are operated by the system supplied HID class driver. 
-              the corresponding class guid :745a17a0-74d3-11d0-b6fe-00a0c90f57da
-            
+             * for many device stup classes. 
+              
+              The actual location where the  GUID_DEVCLASS_HIDCLASS   is defined is in https://github.com/tpn/winsdk-10/blob/master/Include/10.0.14393.0/shared/devguid.h 
+                and the same GUID number is re-declared as GUID_HIDClass in https://github.com/tpn/winsdk-10/blob/master/Include/10.0.10240.0/shared/dinputd.h.
+
+               WARNING!!: Do not mistake this with the device interface class 	
+                  GUID_DEVINTERFACE_HID {4D1E55B2-F16F-11CF-88CB-001111000030}
+
+              You can read more about Setup classes vs. interface classes here: https://learn.microsoft.com/en-us/windows-hardware/drivers/install/setup-classes-versus-interface-classes
              */
 
 
