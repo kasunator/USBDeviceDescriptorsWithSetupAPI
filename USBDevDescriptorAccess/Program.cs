@@ -14,7 +14,8 @@ namespace USBDevDescriptorAccess
             //Win32DeviceMgmt.GetAllUsbHidDEvices();
             //Win32DeviceMgmt.test_GetClassGUIDs();
             //Win32DeviceMgmt.test_SetupDiGetClassDevs_usb();
-            Win32DeviceMgmt.test_SetupDiGetClassDevs_port();
+            //Win32DeviceMgmt.test_SetupDiGetClassDevs_port();
+            Win32DeviceMgmt.ComportInfoList();
         }
     }
 }

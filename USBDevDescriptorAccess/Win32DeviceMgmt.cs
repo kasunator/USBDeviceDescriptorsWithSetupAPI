@@ -36,6 +36,7 @@ namespace USBDevDescriptorAccess
             public string VID;
             public string PID;
             public string MI;
+            public string port_name;
 
         }
 
@@ -482,7 +483,167 @@ namespace USBDevDescriptorAccess
             return devices;
         }
 
+        /* this functions resturns a list of SetuiApiUSBDevInfo for the comports that matches the passed pid and vids */
+        public static List<DeviceInfoAdvanced> ComportInfoList()
+        {
+            StringBuilder devIDStrBuilder = new StringBuilder(260);
+            /* populate the BusReportedDevieDesc with the corresponding GUID devpkey.h */
+            initDEVPKEY_Device_BusReportedDeviceDesc();
+            initDEVPKEY_Device_Manufacturer();
+            initDEVPKEY_Device_FriendlyName();
+            initDEVPKEY_Device_LocationInfo();
+            initDEVPKEY_Device_ContainerID();
+            /* HID class GUID this value can be found in the following location  
+             * https://learn.microsoft.com/en-us/windows-hardware/drivers/install/system-defined-device-setup-classes-available-to-vendors 
+             * for many device stup classes. 
+              
+              The actual location where the  GUID_DEVCLASS_HIDCLASS   is defined is in https://github.com/tpn/winsdk-10/blob/master/Include/10.0.14393.0/shared/devguid.h 
+                and the same GUID number is re-declared as GUID_HIDClass in https://github.com/tpn/winsdk-10/blob/master/Include/10.0.10240.0/shared/dinputd.h.
 
+               WARNING!!: Do not mistake this with the device interface class 	
+                  GUID_DEVINTERFACE_HID {4D1E55B2-F16F-11CF-88CB-001111000030}
+
+              You can read more about Setup classes vs. interface classes here: https://learn.microsoft.com/en-us/windows-hardware/drivers/install/setup-classes-versus-interface-classes
+             */
+
+
+            //Guid(uint a, ushort b, ushort c, byte d, byte e, byte f, byte g, byte h, byte i, byte j, byte k);
+            Guid comport_class = new Guid(0x4d36e978, 0xe325, 0x11ce, 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18);
+
+            //Guid ghid;
+            //SetupAPI.HidD_GetHidGuid(out ghid);
+            List<DeviceInfoAdvanced> devices = new List<DeviceInfoAdvanced>();
+            /* get an Hardware device info handle for devices enumarated as "USB" */
+            IntPtr hDeviceInfoSet = SetupAPI.SetupDiGetClassDevs(ref comport_class, IntPtr.Zero, IntPtr.Zero, SetupAPI.DiGetClassFlags.DIGCF_PRESENT);
+            if (hDeviceInfoSet == IntPtr.Zero)
+            {
+                Console.WriteLine(" SetupDiGetClassDevs failed ");
+            }
+
+            try
+            {
+                UInt32 iMemberIndex = 0;
+                while (true)
+                {
+                    SetupAPI.SP_DEVINFO_DATA deviceInfoData = new SetupAPI.SP_DEVINFO_DATA();
+                    deviceInfoData.cbSize = (uint)Marshal.SizeOf(typeof(SetupAPI.SP_DEVINFO_DATA));
+                    /* get the device information data structure i.e SP_DEVINFO_DATA from the device information set for the correspoinding device index */
+                    bool success = SetupAPI.SetupDiEnumDeviceInfo(hDeviceInfoSet, iMemberIndex, ref deviceInfoData);
+                    if (!success)
+                    {
+                        // No more devices in the device information set
+                        break;
+                    }
+
+                    DeviceInfoAdvanced deviceInfo = new DeviceInfoAdvanced();
+
+
+                    //deviceInfo.CM_Get_Device_ID;
+                    if (GetDeviceID(deviceInfoData, out deviceInfo.DeviceInstanceID) != true)
+                    {
+                        continue;
+                    }
+                    Console.WriteLine("************************");
+                    Console.WriteLine("CM_Get_Device_ID, aka DeviceInstanceID:{0}", deviceInfo.DeviceInstanceID);
+
+
+                    //deviceInfo.DeviceDescription;
+                    deviceInfo.DeviceDescription = GetDeviceDescription(hDeviceInfoSet, deviceInfoData);
+                    Console.WriteLine("Device Description:{0}", deviceInfo.DeviceDescription);
+
+                    //deviceType
+                    string deviceType = GetDeviceType(hDeviceInfoSet, deviceInfoData);
+                    Console.WriteLine("Device Type:{0}", deviceType);
+
+                    //deviceInfo.HardwareIDs
+                    deviceInfo.HardwareIDs = GetHardwareID(hDeviceInfoSet, deviceInfoData);
+
+                    string[] hardWareIDArray = deviceInfo.HardwareIDs.Split('\0');
+                    Console.WriteLine("HardwareIDs:");
+                    foreach (string hardwareID in hardWareIDArray)
+                    {
+                        if (hardwareID.Length > 1)
+                            Console.WriteLine("       " + hardwareID);
+                    }
+                    //deviceInfo.BusRprtedDevDesc
+                    deviceInfo.BusRprtedDevDesc = GetDeviceBusDescription(hDeviceInfoSet, deviceInfoData);
+                    Console.WriteLine("Bus Reported Dev Descriptor:{0}", deviceInfo.BusRprtedDevDesc);
+
+                    //deviceInfo.DeviceManufacturer
+                    deviceInfo.DeviceManufacturer = GetDeviceManufacturer(hDeviceInfoSet, deviceInfoData);
+                    Console.WriteLine("Device Manufacturer:{0}", deviceInfo.DeviceManufacturer);
+
+                    //deviceInfo.DeviceFriendlyName
+                    deviceInfo.DeviceFriendlyName = GetDeviceFriendlyName(hDeviceInfoSet, deviceInfoData);
+                    Console.WriteLine("Device Friendly Name:{0}", deviceInfo.DeviceFriendlyName);
+
+                    //deviceInfo.DeviceLocationInfo
+                    deviceInfo.DeviceLocationInfo = GetDeviceLocationInfo(hDeviceInfoSet, deviceInfoData);
+                    Console.WriteLine("Device location info:{0}", deviceInfo.DeviceLocationInfo);
+
+                    //deviceInfo.ContainerID
+                    deviceInfo.ContainerID = GetDeviceContainerID(hDeviceInfoSet, deviceInfoData);
+                    Console.WriteLine("Device Container ID:{0}", deviceInfo.ContainerID);
+
+                    string[] splitStringArray = deviceInfo.DeviceInstanceID.Split('&');
+                    //deviceInfo.VID
+                    /* we look for index of "VID_" then extract index+4 to end*/
+                    if (splitStringArray.Length >= 1)
+                    {
+                        int VID_index = splitStringArray[0].IndexOf("VID_");
+                        if (VID_index > -1)
+                        {
+                            deviceInfo.VID = splitStringArray[0].Substring(VID_index + "VID_".Length, 4);
+                            Console.WriteLine("VID:{0}", deviceInfo.VID);
+                        }
+                    }
+                    //deviceInfo.PID
+                    /* we look for index of "PID_" then extract index+4 to end*/
+                    if (splitStringArray.Length >= 2)
+                    {
+                        int PID_index = splitStringArray[1].IndexOf("PID_");
+                        if (PID_index > -1)
+                        {
+                            deviceInfo.PID = splitStringArray[1].Substring(PID_index + "PID_".Length, 4);
+                            Console.WriteLine("PID:{0}", deviceInfo.PID);
+                        }
+                    }
+
+                    //deviceInfo.MI
+                    /* we look for index of "MI_" then extract index+4 to end*/
+                    if (splitStringArray.Length >= 3)
+                    {
+                        int MI_index = splitStringArray[2].IndexOf("MI_");
+                        if (MI_index > -1)
+                        {
+                            deviceInfo.MI = splitStringArray[2].Substring(MI_index + "MI_".Length, 2);
+                            Console.WriteLine("MI:{0}", deviceInfo.MI);
+                        }
+                    }
+
+                    //deviceInfo.name
+                    deviceInfo.port_name = GetDeviceName(hDeviceInfoSet, deviceInfoData);
+                    Console.WriteLine("port_name:{0}", deviceInfo.port_name);
+
+                    Console.WriteLine("************************");
+                    devices.Add(deviceInfo);
+                    iMemberIndex++;
+                }
+            }
+            finally
+            {
+                if (SetupAPI.SetupDiDestroyDeviceInfoList(hDeviceInfoSet) == true)
+                {
+                    Console.WriteLine("Destroy Device Info List successful");
+                }
+                else
+                {
+                    Console.WriteLine("Destroy Device Info List Failed");
+                }
+            }
+
+            return devices;
+        }
 
         private static bool GetDeviceID(SetupAPI.SP_DEVINFO_DATA devInfoData, out string device_id)
         {
